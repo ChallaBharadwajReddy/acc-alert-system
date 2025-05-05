@@ -1,5 +1,7 @@
 import React from "react";
+import { db, rdb } from './firebase';
 import { useLocation, useNavigate } from "react-router-dom";
+import { ref, update } from "firebase/database";
 import "./Notifications.css";
 
 const Notifications = () => {
@@ -14,14 +16,18 @@ const Notifications = () => {
   // Handle mark as dealt
   const handleMarkDealt = () => {
     // Logic to convert the accident to dealt (you can update your backend or state here)
+    const accidentRef = ref(rdb,`accidents/${accident.id}`);
+          update(accidentRef, { status: "dealt" })
+            .then(() => console.log("Accident marked as dealt successfully!"))
+            .catch((error) => console.error("Error updating accident:", error));
     console.log(`Accident ${accident.accident_id} marked as dealt.`);
     // Navigate back to the home page
-    navigate("/");
+    navigate("/home");
   };
 
   // Handle back to home
   const handleBackToHome = () => {
-    navigate("/");
+    navigate("/home");
   };
 
   return (
