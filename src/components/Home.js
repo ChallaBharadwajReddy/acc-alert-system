@@ -4,6 +4,7 @@ import "./Home.css";
 import { db, rdb } from './firebase';
 import { ref, onValue, update } from "firebase/database";
 import { FaCarCrash, FaCheckCircle } from "react-icons/fa";
+import { MdMedicalServices } from "react-icons/md";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -60,7 +61,7 @@ const Home = () => {
   return (
     <div className="home-container">
       <header className="home-header">
-        <h1 className="page-title">🚨 Accident Alert System</h1>
+        <h1 className="page-title">🚨 Accident/emergency Alert System</h1>
         <button className="logout-button" onClick={handleLogout}>Logout</button>
       </header>
 
@@ -80,28 +81,34 @@ const Home = () => {
       </div>
 
       <div className="accidents-list">
-        {(selectedTab === "active" ? activeAccidents : dealtAccidents).map((accident) => (
-          <div key={accident.id} className="accident-item">
-            <div className="accident-icon">
-              {selectedTab === "active"
-                ? <FaCarCrash color="red" size={40} />
-                : <FaCheckCircle color="green" size={40} />}
-            </div>
-            <div className="accident-details">
-              <p><strong>Accident No:</strong> {accident.accident_no}</p>
-              <p><strong>Place:</strong> {accident.place}</p>
-              <p><strong>Location:</strong> {accident.latitude} {accident.longitude}</p>
-              <p><strong>Time:</strong> {accident.time}</p>
-            </div>
-            <div className="action-buttons">
-              <button className="details-button" onClick={() => handleAccidentClick(accident)}>View Details</button>
-              {selectedTab === "active" && (
-                <button className="mark-dealt-button" onClick={() => markAsDealt(accident.id)}>Mark as Dealt</button>
-              )}
-            </div>
-          </div>
-        ))}
+  {(selectedTab === "active" ? activeAccidents : dealtAccidents).map((accident) => (
+      <div key={accident.id} className="accident-item">
+        <div className="accident-icon">
+          {selectedTab === "active" ? (
+            accident.type === 1 ? (
+              <MdMedicalServices color="red" size={40} />
+            ) : (
+              <FaCarCrash color="red" size={40} />
+            )
+          ) : (
+            <FaCheckCircle color="green" size={40} />
+          )}
+        </div>
+        <div className="accident-details">
+          <p><strong>Accident No:</strong> {accident.accident_no}</p>
+          <p><strong>Place:</strong> {accident.place}</p>
+          <p><strong>Location:</strong> {accident.latitude} {accident.longitude}</p>
+          <p><strong>Time:</strong> {accident.time}</p>
+        </div>
+        <div className="action-buttons">
+          <button className="details-button" onClick={() => handleAccidentClick(accident)}>View Details</button>
+          {selectedTab === "active" && (
+            <button className="mark-dealt-button" onClick={() => markAsDealt(accident.id)}>Mark as Dealt</button>
+          )}
+        </div>
       </div>
+  ))}
+</div>
     </div>
   );
 };
