@@ -1,70 +1,66 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Home.css";
+import { db, rdb } from './firebase';
+import { ref, onValue, update } from "firebase/database";
+import { FaCarCrash, FaCheckCircle } from "react-icons/fa";
 
 const Home = () => {
   const navigate = useNavigate();
 
-  // Sample data for accidents
-  const [activeAccidents, setActiveAccidents] = useState([
-    {
-      id: 1,
-      accidentPlace: "Highway 21",
-      location: "Latitude: 34.0522, Longitude: -118.2437",
-      injuredPersons: 2,
-    },
-    {
-      id: 2,
-      accidentPlace: "Main Street",
-      location: "Latitude: 36.7783, Longitude: -119.4179",
-      injuredPersons: 1,
-    },
-    {
-      id: 3,
-      accidentPlace: "bharadwaj street",
-      location: "Latitude: 36.7783, Longitude: -119.4179",
-      injuredPersons: 1,
-    }
-  ]);
-
-  const [dealtAccidents, setDealtAccidents] = useState([
-    {
-      id: 3,
-      accidentPlace: "Park Avenue",
-      location: "Latitude: 40.7128, Longitude: -74.0060",
-      injuredPersons: 3,
-    },
-  ]);
-
+  const [activeAccidents, setActiveAccidents] = useState([]);
+  const [dealtAccidents, setDealtAccidents] = useState([]);
   const [selectedTab, setSelectedTab] = useState("active");
 
-  // Function to handle the click and navigate to the detailed notification page
+  useEffect(() => {
+    const accidentRef = ref(rdb, "accidents/");
+
+    const unsubscribe = onValue(accidentRef, (snapshot) => {
+      const active = [];
+      const dealt = [];
+
+      snapshot.forEach((accident) => {
+        const data = accident.val();
+        if (data.status === 'active') {
+          active.push({ id: accident.key, ...data });
+        } else {
+          dealt.push({ id: accident.key, ...data });
+        }
+      });
+
+      setActiveAccidents(active.sort((a, b) => b.accident_no - a.accident_no));
+      setDealtAccidents(dealt.sort((a, b) => b.accident_no - a.accident_no));
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const handleAccidentClick = (accident) => {
     navigate("/notifications", { state: { accident } });
   };
 
-  // Function to mark accident as dealt
   const markAsDealt = (accidentId) => {
     const accident = activeAccidents.find((a) => a.id === accidentId);
     if (accident) {
-      // Remove accident from active list and add it to dealt list
       setActiveAccidents(activeAccidents.filter((a) => a.id !== accidentId));
-      setDealtAccidents([...dealtAccidents, accident]);
+      setDealtAccidents([...dealtAccidents, { ...accident, status: 'dealt' }]);
+
+      const accidentRef = ref(rdb,`accidents/${accidentId}`);
+      update(accidentRef, { status: "dealt" })
+        .then(() => console.log("Accident marked as dealt successfully!"))
+        .catch((error) => console.error("Error updating accident:", error));
     }
   };
 
-  // Function to handle logout
   const handleLogout = () => {
-    // Handle logout logic here
     console.log("User logged out");
-    // For example, navigate to the login page or clear user session
     navigate("/login");
   };
 
   return (
     <div className="home-container">
       <header className="home-header">
-        <h1 className="page-title">Accident Alert System</h1>
+        <h1 className="page-title">🚨 Accident Alert System</h1>
         <button className="logout-button" onClick={handleLogout}>Logout</button>
       </header>
 
@@ -84,33 +80,27 @@ const Home = () => {
       </div>
 
       <div className="accidents-list">
-        {selectedTab === "active"
-          ? activeAccidents.map((accident) => (
-              <div key={accident.id} className="accident-item">
-                <p><strong>Accident No:</strong> {accident.id}</p>
-                <p><strong>Place:</strong> {accident.accidentPlace}</p>
-                <p><strong>Location:</strong> {accident.location}</p>
-                <p><strong>Injured Persons:</strong> {accident.injuredPersons}</p>
-                <div className="action-buttons">
-                  {/* Button to navigate to the detailed page */}
-                  <button className="details-button" onClick={() => handleAccidentClick(accident)}>View Details</button>
-                  {/* Button to mark the accident as dealt */}
-                  <button className="mark-dealt-button" onClick={() => markAsDealt(accident.id)}>Mark as Dealt</button>
-                </div>
-              </div>
-            ))
-          : dealtAccidents.map((accident) => (
-              <div key={accident.id} className="accident-item">
-                <p><strong>Accident No:</strong> {accident.id}</p>
-                <p><strong>Place:</strong> {accident.accidentPlace}</p>
-                <p><strong>Location:</strong> {accident.location}</p>
-                <p><strong>Injured Persons:</strong> {accident.injuredPersons}</p>
-                <div className="action-buttons">
-                  {/* Button to navigate to the detailed page */}
-                  <button className="details-button" onClick={() => handleAccidentClick(accident)}>View Details</button>
-                </div>
-              </div>
-            ))}
+        {(selectedTab === "active" ? activeAccidents : dealtAccidents).map((accident) => (
+          <div key={accident.id} className="accident-item">
+            <div className="accident-icon">
+              {selectedTab === "active"
+                ? <FaCarCrash color="red" size={40} />
+                : <FaCheckCircle color="green" size={40} />}
+            </div>
+            <div className="accident-details">
+              <p><strong>Accident No:</strong> {accident.accident_no}</p>
+              <p><strong>Place:</strong> {accident.place}</p>
+              <p><strong>Location:</strong> {accident.latitude} {accident.longitude}</p>
+              <p><strong>Time:</strong> {accident.time}</p>
+            </div>
+            <div className="action-buttons">
+              <button className="details-button" onClick={() => handleAccidentClick(accident)}>View Details</button>
+              {selectedTab === "active" && (
+                <button className="mark-dealt-button" onClick={() => markAsDealt(accident.id)}>Mark as Dealt</button>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

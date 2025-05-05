@@ -11,15 +11,10 @@ const Notifications = () => {
     return <p>No accident details available</p>;
   }
 
-  const [latitude, longitude] = accident.location
-    .replace("Latitude: ", "")
-    .replace("Longitude: ", "")
-    .split(", ");
-
   // Handle mark as dealt
   const handleMarkDealt = () => {
     // Logic to convert the accident to dealt (you can update your backend or state here)
-    console.log(`Accident ${accident.id} marked as dealt.`);
+    console.log(`Accident ${accident.accident_id} marked as dealt.`);
     // Navigate back to the home page
     navigate("/");
   };
@@ -46,10 +41,10 @@ const Notifications = () => {
         {/* Left Side: Accident Details */}
         <div className="notification-detail">
           <h2>Accident Details</h2>
-          <p><strong>Accident No:</strong> {accident.id}</p>
-          <p><strong>Accident Place:</strong> {accident.accidentPlace}</p>
-          <p><strong>Location:</strong> {accident.location}</p>
-          <p><strong>Number of Injured Persons:</strong> {accident.injuredPersons}</p>
+          <p><strong>Accident No:</strong> {accident.accident_no}</p>
+          <p><strong>Accident Place:</strong> {accident.place}</p>
+          <p><strong>Location:</strong> {accident.latitude} {accident.longitude}</p>
+          <p><strong>Time:</strong> {accident.time}</p>
         </div>
 
         {/* Right Side: Map */}
@@ -59,7 +54,7 @@ const Notifications = () => {
             width="100%"
             height="100%"
             frameBorder="0"
-            src={`https://www.google.com/maps?q=${latitude},${longitude}&hl=es&z=14&output=embed`}
+            src={`https://www.google.com/maps?q=${accident.latitude},${accident.longitude}&hl=es&z=14&output=embed`}
             allowFullScreen
           ></iframe>
         </div>
